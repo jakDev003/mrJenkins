@@ -1,0 +1,39 @@
+jenkins:
+  systemMessage: "Jenkins configured automatically by Jenkins Configuration as Code plugin\n\n"
+  numExecutors: 1  # Reduced number of executors
+  scmCheckoutRetryCount: 2
+  mode: NORMAL
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${ADMIN_USERNAME}"
+          password: "${ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+
+tool:
+  git:
+    installations:
+      - name: "Default"
+        home: "/usr/bin/git"
+
+unclassified:
+  location:
+    url: "http://localhost:8080/"
+  mailer:
+    smtpHost: "smtp.gmail.com"
+    smtpPort: "587"
+    useSsl: false
+    useTls: true
+    smtpAuthUsername: "${GMAIL_USERNAME}"
+    smtpAuthPassword: "${GMAIL_PASSWORD}"
+    adminAddress: "admin@mrjenkins.com"
+  metrics:
+    reporters:
+      - jmx:
+          domain: "metrics"
+      - log:
+          period: 1
+          unit: "MINUTES"
