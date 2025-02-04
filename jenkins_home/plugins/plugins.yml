@@ -1,0 +1,12 @@
+plugins:
+  - artifactId: git
+    source:
+      version: latest
+  - artifactId: docker
+  - artifactId: credentials-binding
+  - artifactId: email-ext
+  - artifactId: sonar
+  - artifactId: docker-workflow
+  - artifactId: nodejs
+  - artifactId: metrics
+  - artifactId: configuration-as-code

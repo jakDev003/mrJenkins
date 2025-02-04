@@ -1,0 +1,71 @@
+pipeline {
+    agent any
+
+    environment {
+        GIT_REPO = 'git@github.com:username/repo1.git'
+        SONARQUBE_URL = 'http://sonarqube:9000'
+        SONARQUBE_CREDENTIALS = credentials('SONARQUBE_CREDENTIALS')
+        SFTP_SERVER = 'sftp.example.com'
+        SFTP_USER = credentials('SFTP_USER')
+        SFTP_PASSWORD = credentials('SFTP_PASSWORD')
+        SFTP_DESTINATION = '/path/to/deploy'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git url: env.GIT_REPO
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh 'mvn clean verify sonar:sonar'
+                }
+            }
+        }
+
+        stage('Run Docker Compose') {
+            steps {
+                sh 'docker-compose up -d'
+            }
+        }
+
+        stage('NPM Test') {
+            steps {
+                sh 'npm install'
+                sh 'npm test'
+            }
+        }
+
+        stage('NPM Build') {
+            steps {
+                sh 'npm run build'
+            }
+        }
+
+        stage('Deploy via SFTP') {
+            steps {
+                script {
+                    def builtFiles = 'dist/*' // Adjust this path based on your build output
+                    sh """
+                        sshpass -p ${env.SFTP_PASSWORD} sftp -o StrictHostKeyChecking=no ${env.SFTP_USER}@${env.SFTP_SERVER} <<EOF
+                        put -r ${builtFiles} ${env.SFTP_DESTINATION}
+                        bye
+EOF
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker-compose down'
+            mail to: 'admin@example.com',
+                 subject: "Jenkins Pipeline: ${currentBuild.fullDisplayName}",
+                 body: "Pipeline ${currentBuild.fullDisplayName} finished with status: ${currentBuild.currentResult}"
+        }
+    }
+}
